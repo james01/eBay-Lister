@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>New Listing</title>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+	<link href="https://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" onload="window.$ = window.jQuery = module.exports"></script>
+	<script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
+	<script src="https://rezitech.github.com/stash/stash.min.js"></script>
+</head>
+<body>
+	<div class="row">
+		<div class="column" id="titleContainer">
+			<h1>Title</h1>
+			<textarea id="titleTextarea" maxlength="80" rows="2"></textarea>
+			<button id="autofillTitle">Use Previous</button>
+			<button id="searchEbay">Search eBay</button>
+			<p class="characterCount" id="titleCount">80 character(s) left</p>
+		</div>
+		<div class="column" id="categoryContainer">
+			<h1>Category</h1>
+			<select id="categorySelect" onchange="getItemSpecifics()"></select>
+			<span id="categoryDownTriangle">&#9662;</span>
+			<p id="categoryText"></p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="column" id="conditionContainer">
+			<h1>Condition</h1>
+			<textarea id="conditionTextarea" onkeyup="conditionCounter()" maxlength="1000" rows="4"></textarea>
+			<button id="autofillCondition">Use Previous</button>
+			<button id="glazeCrazingButton">+ Glaze crazing</button>
+			<p class="characterCount" id="conditionCount">1000 character(s) left</p>
+		</div>
+		<div class="column" id="itemSpecificsContainer">
+			<h1>Item Specifics</h1>
+		</div>
+	</div>
+	<div class="row" id="descriptionContainer">
+		<h1>Description</h1>
+		<p id="descriptionTemplateText"><span id="descriptionNameText">You're buying a(n) <input type="text" id="descriptionNameInput"> . </span><input type="text" id="tallInput"><span id="tallText"> inch(es) tall. </span><input type="text" id="wideInput"><span id="wideText"> inch(es) wide. </span><input type="text" id="longInput"><span id="longText"> inch(es) long.</span>
+		<input type="text" id="diameterInput" class="imgInput"><img src="diameter.jpg" id="diameterImg">
+		<input type="text" id="finialInput" class="imgInput"><img src="finial.jpg" id="finialImg">
+		<input type="text" id="handleInput" class="imgInput"><img src="handle.jpg" id="handleImg">
+		<input type="text" id="painting1Input" class="imgInput"><img src="painting_1.jpg" id="painting1Img">
+		<input type="text" id="painting2Input" class="imgInput"><img src="painting_2.jpg" id="painting2Img">
+		<input type="text" id="painting3Input" class="imgInput"><img src="painting_3.jpg" id="painting3Img">
+		<input type="text" id="painting4Input" class="imgInput"><img src="painting_4.jpg" id="painting4Img">
+		</p>
+		<button id="autofillDescription">Use Previous</button>
+		<button id="doneButton">Done</button>
+	</div>
+	<div class="row" id="picturesContainer">
+		<h1>Pictures</h1><p id="removePicturesButton">Remove</p>
+		<p id="picturesSubheading">Select an item:</p>
+		<div id="noPicturesText">No pictures<br>to show.</div>
+		<div id="placeholderImage"></div>
+	</div>
+	<div class="row">
+		<div class="column" id="sellingDetailsContainer">
+			<h1>Selling Details</h1>
+			<p id="priceInputText">Price<span id="dollarSign">$</span><input type="text" id="priceInput"></p>
+			<p id="handlingFeeText">+ Add Handling Fee</p>
+			<div id="priceFormatContainer">
+				<label>
+					<div class="radioInputContainer">
+						<input type="radio" name="format" value="FixedPriceItem"><span class="radioText">Fixed Price</span><span class="customRadioButton"></span><br>
+					</div>
+				</label>
+				<label>
+					<div class="radioInputContainer">
+						<input type="radio" name="format" value="Chinese"><span class="radioText">Auction</span><span class="customRadioButton"></span>
+					</div>
+				</label>
+			</div>
+		</div>
+		<div class="column">
+			<h1>Box Dimensions</h1>
+			<p id="dimensionsInputText"><input type="text" id="boxLengthInput"> in. &nbsp; &nbsp; X <input type="text" id="boxWidthInput"> in. &nbsp; &nbsp; X <input type="text" id="boxHeightInput"> in.</p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="column">
+			<h1>Shipping</h1>
+			<div id="shippingContainer" data-checked="true"><div id="internationalShippingCheckbox"></div><p id="internationalShippingText">International</p></div>
+		</div>
+		<div class="column">
+			<h1>Box Weight</h1>
+			<p id="weightInputText"><input type="text" id="poundsInput"> pound(s) &nbsp; &nbsp; <input type="text" id="ouncesInput"> ounce(s)</p>
+		</div>
+	</div>
+	<div class="row">
+		<button id="listItemButton" disabled>List Item</button>
+	</div>
+	<div class="row" id="listStatusContainer">
+		<div id="horizontalLine"></div>
+		<div id="listStatus">
+			<img src="" width="20" height="20">
+			<h1></h1>
+			<button></button>
+		</div>
+		<p></p>
+	</div>
+
+
+	<script type="text/javascript">
+
+		const remote = require("electron").remote;
+
+		var needsConfirmationBeforeClosing = false;
+
+		window.onbeforeunload = (e) => {
+			if (needsConfirmationBeforeClosing) {
+				e.returnValue = false;
+				remote.dialog.showMessageBox(remote.getCurrentWindow(),
+				{
+					type: "question",
+					buttons: ["Yes", "No"],
+					title: "Confirm",
+					message: "Are you sure you want to close this listing?",
+					detail: "Entered text will not be saved."
+				}, function(i) {
+					if (i == 0) {
+						remote.getCurrentWindow().destroy();
+					}
+				});
+			}
+		}
+
+		var listItemCheck = {
+			title: false,
+			category: false,
+			description: false,
+			pictures: false,
+			price: false,
+			format: false,
+			dimensions: false,
+			weight: false
+		};		
+
+		// Character counters.
+		$("#titleTextarea").keyup(function() {
+			document.title = $(this).val() ? $(this).val() : "New Listing";
+			$("#titleCount").html((80 - $(this).val().length) + " character(s) left");
+		});
+		function conditionCounter() {
+			$("#conditionCount").html((1000 - $("#conditionTextarea").val().length) + " character(s) left");
+		};
+
+		// Title list item check.
+		$("#titleTextarea").focusout(function() {
+			if ($(this).val()) {
+				listItemCheck.title = true;
+			} else {
+				listItemCheck.title = false;
+			};
+			evaluateListButtonState();
+		});
+
+		// Open web browser and search eBay.
+		$("#searchEbay").click(function() {
+			const shell = require("electron").shell;
+			shell.openExternal("https://www.ebay.com/sch/" + encodeURI($("#titleTextarea").val().toLowerCase()) + "?LH_Complete=1");
+		});
+
+		// Autofill title with previous title saved in local storage.
+		$("#autofillTitle").click(function() {
+			$("#titleTextarea").val(stash.get("title"));
+			$("#titleTextarea").data("edited", true);
+			$("#titleTextarea").keyup();
+		})
+
+		// Calls getCategories() after 1 second without typing in title field.
+		var typingTimer;
+		var doneTypingInterval = 1000;
+		$("#titleTextarea").keyup(function() {
+			$("#categorySelect").attr("disabled", true);
+			clearTimeout(typingTimer);
+			if ($("#titleTextarea").val()) {
+				typingTimer = setTimeout(getCategories, doneTypingInterval);
+			} else {
+				$("#categorySelect").html(null);
+				$("#categoryText").html(null);
+				$(".specificCell").remove();
+			}
+		});
+
+		function getCategories() {
+			$(document.body).css({"cursor": "progress"});
+
+			// Create XML Request.
+			let xmlRequest = `
+			<?xml version="1.0" encoding="utf-8"?>
+			<GetSuggestedCategoriesRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+				<RequesterCredentials>
+				<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+				</RequesterCredentials>
+				<Query>` + $("#titleTextarea").val() + `</Query>
+				<ErrorLanguage>en_US</ErrorLanguage>
+				<Version>1043</Version>
+				<WarningLevel>High</WarningLevel>
+			</GetSuggestedCategoriesRequest>
+			`;
+
+
+			// Send HTTP request.
+			$.ajax({
+				url: "https://api.ebay.com/ws/api.dll",
+				type: "POST",
+				data: xmlRequest,
+				headers: {
+					"X-EBAY-API-COMPATIBILITY-LEVEL": "1043",
+					"X-EBAY-API-DEV-NAME": "f22eb88a-1c47-4dc2-ad0d-e42d08b9b08c",
+					"X-EBAY-API-APP-NAME": "JamesRan-AntiqueL-PRD-15d7504c4-a7cbc7af",
+					"X-EBAY-API-CERT-NAME": "PRD-5d7504c476a1-8a1b-4afe-9ae0-3571",
+					"X-EBAY-API-CALL-NAME": "GetSuggestedCategories",
+					"X-EBAY-API-SITEID": "0",
+				},
+				contentType: "text/xml",
+				dataType: "xml",
+				success: function(resp) {
+					$("#categorySelect").attr("disabled", false);
+					$("#categorySelect").html(null);
+					$(resp).find("SuggestedCategory").each(function() {
+						let html = [];
+						$(this).find("CategoryParentName").each(function() {
+							html.push($(this).text());
+						});
+						html.push($(this).find("CategoryName").text());
+						$("#categorySelect").append("<option value='" + $($(this).find("CategoryID")[0]).text() + "' data-parent-category='" + $($(this).find("CategoryParentName")[0]).text() + "'>" + html.join(" > ") + "</option>");
+					});
+					$("#categoryText").html($("#categorySelect option:selected").html());
+					listItemCheck.category = $("#categorySelect").val() ? true : false;
+					evaluateListButtonState();
+					getItemSpecifics();
+				}
+			});
+		}
+
+		// Enlarge category selector when moused over.
+		$("#categorySelect").change(function() {
+			$("#categoryText").html($("#categorySelect option:selected").html());
+		})
+		$("#categorySelect").mouseenter(function() {
+			$(this).css("color", "white");
+			$("#categoryText").css("display", "inherit");
+			if ($("#categoryText").height() > 38) {
+				$(this).css("height", "89px");
+			} else if ($("#categoryText").height() > 19) {
+				$(this).css("height", "70px");
+			}
+		})
+		$("#categorySelect").mouseleave(function() {
+			$("#categoryText").css("display", "none");
+			$(this).css("color", "black");
+			$(this).css("height", "51px");
+		})
+
+		// Remove enlarge when category is clicked on. (For it to work on Windows)
+		$("#categorySelect").mousedown(function() {
+			if ($(this).val()) {
+				$(this).mouseleave();
+			}
+		});
+
+		// Keeps track of whether condition textarea has been edited.
+		$("#conditionTextarea").data("edited", false);
+		$("#conditionTextarea").keyup(function() {
+			$(this).data("edited", true);
+		});
+
+		// Autofill condition textarea based on title.
+		$("#titleTextarea").focusout(function() {
+			if ($("#conditionTextarea").data("edited") == false && $(this).val()) {
+				if ($("#titleTextarea").val().toLowerCase().indexOf("nice") >= 0) {
+					$("#conditionTextarea").val("Nice. No damage. No repairs. ");
+					conditionCounter();
+				} else {
+					$("#conditionTextarea").val("Please see photos for condition and completeness. ");
+					conditionCounter();
+				};
+			};
+		});
+
+		// Autofill condition with previous condition saved in local storage.
+		$("#autofillCondition").click(function() {
+			$("#conditionTextarea").val(stash.get("condition"));
+			$("#conditionTextarea").data("edited", true);
+			conditionCounter();
+		});
+
+		// Add glaze crazing text
+		$("#glazeCrazingButton").click(function() {
+			const glazeText = " glaze crazing. ";
+			$("#conditionTextarea").val($("#conditionTextarea").val() + glazeText);
+			$("#conditionTextarea").data("edited", true);
+			conditionCounter();
+			$("#conditionTextarea").focus();
+			const caretIndex = $("#conditionTextarea").val().length - glazeText.length;
+			$("#conditionTextarea")[0].setSelectionRange(caretIndex,caretIndex);
+
+		});
+
+		// Determines whether item specifics have been edited.
+		function itemSpecificsIsEdited() {
+			var edited = false;
+			$(".itemSpecificInput").each(function() {
+				if ($(this).val()) {
+					edited = true;
+					return false;
+				}
+			})
+			return edited;
+		}
+
+		// Get Item Specifics.
+		function getItemSpecifics() {
+			if (!itemSpecificsIsEdited()) {
+				$(document.body).css({"cursor": "progress"});
+
+				let xmlRequest = `
+				<?xml version="1.0" encoding="utf-8"?>
+				<GetCategorySpecificsRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+					<RequesterCredentials>
+					<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+					</RequesterCredentials>
+					<CategoryID>` + $("#categorySelect").val() + `</CategoryID>
+					<MaxNames>6</MaxNames>
+					<MaxValuesPerName>400</MaxValuesPerName>
+					<ErrorLanguage>en_US</ErrorLanguage>
+					<Version>1043</Version>
+					<WarningLevel>High</WarningLevel>
+				</GetCategorySpecificsRequest>
+				`;
+
+				// Send HTTP request.
+				$.ajax({
+					url: "https://api.ebay.com/ws/api.dll",
+					type: "POST",
+					data: xmlRequest,
+					headers: {
+						"X-EBAY-API-COMPATIBILITY-LEVEL": "1043",
+						"X-EBAY-API-DEV-NAME": "f22eb88a-1c47-4dc2-ad0d-e42d08b9b08c",
+						"X-EBAY-API-APP-NAME": "JamesRan-AntiqueL-PRD-15d7504c4-a7cbc7af",
+						"X-EBAY-API-CERT-NAME": "PRD-5d7504c476a1-8a1b-4afe-9ae0-3571",
+						"X-EBAY-API-CALL-NAME": "GetCategorySpecifics",
+						"X-EBAY-API-SITEID": "0",
+					},
+					contentType: "text/xml",
+					dataType: "xml",
+					success: function(resp) {
+						$(".specificCell").remove();
+						$(resp).find("NameRecommendation").each(function(i) {
+							let selector = '<div class="specificCell">';
+							selector += '<span class="itemSpecificLabel">' + $(this).find("Name").text() + '</span>';
+							if ($(this).find("ValueRecommendation").length < 1) {
+								selector += '<input class="itemSpecificInput" name="' + $(this).find("Name").text() + '"></input>';
+							} else {
+								// Add text box to enter custom values.
+								if ($(this).find("SelectionMode").text() == "FreeText") {
+									selector += '<input class="customItemSpecificInput"></input>';
+								}
+								// Add select element.
+								selector += '<select class="itemSpecificInput" name="' + $(this).find("Name").text() + '">';
+								selector += '<option value="">&nbsp;&mdash;</option>';
+								$(this).find("Value").each(function() {
+									selector += '<option>' + $(this).text() + '</option>';
+								});
+								selector += '</select>';
+								selector += '<span class="itemSpecificDownTriangle">&#9662;</span>';
+							};
+							selector += '</div>';
+							$("#itemSpecificsContainer").append(selector);
+							// Resize font if label is too wide.
+							let $label = $($(".itemSpecificLabel")[i])
+							while ($label.width() > $(".specificCell").width()) {
+								let fontSize = parseInt($label.css("fontSize"));
+								$label.css("fontSize", fontSize - 1 + "px");
+							}
+						});
+						// Add event listeners to custom input.
+						$(".customItemSpecificInput").focus(function() {
+							$(this).next().css("color", "white");
+							if ($(this).next().val()) {
+								$(this).val($(this).next().val());
+							}
+							$(this).select();
+						});
+						$(".customItemSpecificInput").focusout(function() {
+							if ($(this).val() != $(this).next().val()) {
+								$(this).next().children(":first").html($(this).val());
+								$(this).next().val($(this).next().children(":first").val());
+								$(this).next().children(":first").attr("value", $(this).val());
+							}
+							if (!$(this).val()) {
+								$(this).next().children(":first").html("&nbsp;&mdash;");
+								$(this).next().children(":first").attr("value", "");
+								$(this).next().css("color", "black");
+							}
+							$(this).next().css("color", "black");
+							$(this).val("");
+						});
+						// Add event listener to select element.
+						$("select.itemSpecificInput").change(function() {
+							$(this).children(":first").html("&nbsp;&mdash;");
+							$(this).children(":first").attr("value", "");
+							$(this).css("color", "black");
+							$(this).prev().val(null);
+						});
+						$(document.body).css({"cursor": "inherit"});
+					}
+				});
+			} else {
+				$(document.body).css({"cursor": "inherit"});
+			}
+		};
+
+		// Autofill description with previous condition saved in local storage.
+		$("#autofillDescription").click(function() {
+			$(this).remove();
+			$("#descriptionTemplateText").remove();
+			$("#doneButton").remove();
+			$("#descriptionContainer").append("<textarea rows='5' id='descriptionTextarea'>" + stash.get("description") + "</textarea>");
+			$("#descriptionTextarea").focus();
+			let caretIndex = stash.get("description").length;
+			$("#descriptionTextarea")[0].setSelectionRange(caretIndex,caretIndex);
+			// List item check.
+			listItemCheck.description = true;
+			evaluateListButtonState();
+		})
+
+		// Darken "You're buying..." text when input is focused.
+		$("#descriptionNameInput").focus(function() {
+			$("#descriptionNameText").css("color", "#3F3F3F");
+		})
+		$("#descriptionNameInput").focusout(function() {
+			$("#descriptionNameText").css("color", "#A1A1A1");
+		})
+
+		// "Click" Done button when enter key is pressed.
+		$("#descriptionTemplateText input").keypress(function(e) {
+			if (e.keyCode == 13) {
+				$("#doneButton").click();
+			}
+		});
+
+		// Convert description template to a string.
+		$("#doneButton").click(function() {
+			// If no description name was entered, use title.
+			let descriptionName = $("#descriptionNameInput").val() ? $("#descriptionNameInput").val() : $("#titleTextarea").val();
+			// Determine whether to use "a" or "an."
+			let article = "a ";
+			if ($.inArray(descriptionName.charAt(0).toLowerCase(), ["a","e","i","o","u"]) >= 0) {
+				article = "an ";
+			};
+			// Splice together description string.
+			let descriptionString = "You're buying " + article + descriptionName + ". "
+			if ($("#tallInput").val()) {
+				const input = $("#tallInput").val();
+				descriptionString += "About " + (input == 1 ? input + " inch tall. " : input + " inches tall. ");
+			};
+			if ($("#wideInput").val()) {
+				const input = $("#wideInput").val();
+				descriptionString += "About " + (input == 1 ? input + " inch wide. " : input + " inches wide. ");
+			};
+			if ($("#longInput").val()) {
+				const input = $("#longInput").val();
+				descriptionString += "About " + (input == 1 ? input + " inch long. " : input + " inches long. ");
+			};
+			if ($("#diameterInput").val()) {
+				const input = $("#diameterInput").val();
+				descriptionString += "About " + (input == 1 ? input + " inch diameter. " : input + " inches diameter. ");
+			};
+			if ($("#finialInput").val()) {
+				const input = $("#finialInput").val();
+				descriptionString += "About " + (input == 1 ? input + " inch" : input + " inches") + " tall to top of finial. ";
+			};
+			if ($("#handleInput").val()) {
+				const input = $("#handleInput").val();
+				descriptionString += "About " + (input == 1 ? input + " inch" : input + " inches") + " across from handle to handle. ";
+			};
+			if ($("#painting1Input").val() && !($("#painting2Input").val())) {
+				const input = $("#painting1Input").val();
+				descriptionString += "Picture measures about " + (input == 1 ? input + " inch" : input + " inches") + " tall with frame";
+			};
+			if ($("#painting2Input").val() && !($("#painting1Input").val())) {
+				const input = $("#painting2Input").val();
+				descriptionString += "Picture measures about " + (input == 1 ? input + " inch" : input + " inches") + " wide with frame";
+			};
+			if ($("#painting1Input").val() && $("#painting2Input").val()) {
+				const input1 = $("#painting1Input").val();
+				const input2 = $("#painting2Input").val();
+				descriptionString += "Picture measures about " + (input1 == 1 ? input1 + " inch" : input1 + " inches") + " tall by " + (input2 == 1 ? input2 + " inch" : input2 + " inches") + " wide with frame";
+			};
+			if ((!($("#painting1Input").val()) && !($("#painting2Input").val())) && ($("#painting3Input").val() || $("#painting4Input").val())) {
+				descriptionString += "Picture measures about ";
+			} else if ($("#painting3Input").val() || $("#painting4Input").val()) {
+				descriptionString += ", and about ";
+			} else if ($("#painting1Input").val() || $("#painting2Input").val()) {
+				descriptionString += ". ";
+			};
+			if ($("#painting3Input").val() && !($("#painting4Input").val())) {
+				const input = $("#painting3Input").val();
+				descriptionString += (input == 1 ? input + " inch" : input + " inches") + " tall without";
+			};
+			if ($("#painting4Input").val() && !($("#painting3Input").val())) {
+				const input = $("#painting4Input").val();
+				descriptionString += (input == 1 ? input + " inch" : input + " inches") + " wide without";
+			};
+			if ($("#painting3Input").val() && $("#painting4Input").val()) {
+				const input1 = $("#painting3Input").val();
+				const input2 = $("#painting4Input").val();
+				descriptionString += (input1 == 1 ? input1 + " inch" : input1 + " inches") + " tall by " + (input2 == 1 ? input2 + " inch" : input2 + " inches") + " wide without";
+			};
+			if ((!($("#painting1Input").val()) && !($("#painting2Input").val())) && ($("#painting3Input").val() || $("#painting4Input").val())) {
+				descriptionString += " frame. ";
+			} else if ($("#painting3Input").val() || $("#painting4Input").val()) {
+				descriptionString += ". ";
+			};
+			// Get rid of template text and buttons.
+			$("#descriptionTemplateText").remove();
+			$(this).remove();
+			$("#autofillDescription").remove();
+			// Add textarea.
+			$("#descriptionContainer").append("<textarea rows='5' id='descriptionTextarea'>" + descriptionString + "</textarea>");
+			// Give focus to textarea and move cursor.
+			$("#descriptionTextarea").focus();
+			let caretIndex = descriptionString.length;
+			$("#descriptionTextarea")[0].setSelectionRange(caretIndex,caretIndex);
+			// List item check.
+			listItemCheck.description = true;
+			evaluateListButtonState();
+		});
+
+		// Monitor changes in Dropbox account.
+		function monitorChangesInDropbox(cursor) {
+			dbx.filesListFolderLongpoll({cursor: cursor, timeout: 30})
+				.then(function(resp) {
+					if ($(".imageDraggable").length == 0) {
+						if (resp.changes) {
+							getImagesFromFoldersInDropbox();
+						} else {
+							monitorChangesInDropbox(cursor);
+						};
+					};
+				})
+		}
+
+		// Get pictures from Dropbox.
+		var dbx = new Dropbox.Dropbox({ accessToken: "W-YZ0CUM93AAAAAAAAAEpDNIefVMJYUr__kn8B3irDa9LmoauavWIlb2-FZDIPCn" });
+		var imagesDirectory = "";
+		// Create an array of entries containing paths to the first picture in each folder.
+		function getImagesFromFoldersInDropbox() {
+			dbx.filesListFolder({path: ""})
+				.then(function(response) {
+					listItemCheck.pictures = false;
+					evaluateListButtonState();
+					monitorChangesInDropbox(response.cursor);
+					imagesDirectory = "";
+					let entriesArray = [];
+					let parentDirArray = [];
+					let n = 0;
+					let length = response.entries.length;
+					$(".imageSelectable").remove();
+					if (length == 0) {
+						$("#noPicturesText").css("display", "inherit");
+					} else {
+						$("#noPicturesText").css("display", "none");
+						response.entries.forEach(function(entry) {
+							let parentDir = entry.path_lower;
+							if (entry[".tag"] == "folder") {
+								// Get first image from folder.
+								dbx.filesListFolder({path: entry.path_lower, limit: 1})
+									.then(function(response) {
+										if (response.entries.length > 0) {
+											entriesArray.push({
+												path: response.entries[0].path_lower,
+												format: "jpeg",
+												size: "w640h480"
+											});
+											parentDirArray.push(parentDir);
+										}
+										n++;
+										if (n == length) {
+											// Called when entriesArray is finished populating.
+											getSelectableThumbnails(entriesArray, parentDirArray);
+										}
+									})
+									.catch(function(error) {
+										console.log(error);
+									})
+							} else {
+								// Condition to account for a single image file (not a folder).
+								entriesArray.push({
+									path: parentDir,
+									format: "jpeg",
+									size: "w640h480"
+								})
+								parentDirArray.push(parentDir);
+								n++;
+								if (n == length) {
+									// Called when entriesArray is finished populating.
+									getSelectableThumbnails(entriesArray, parentDirArray);
+								}
+							}
+						});
+					}
+				})
+				.catch(function(error) {
+					console.log(error);
+				});
+		};
+		getImagesFromFoldersInDropbox();
+		// Get the selectable thumbnails of the paths in the array.
+		function getSelectableThumbnails(entriesArray, parentDirArray) {
+			dbx.filesGetThumbnailBatch({entries: entriesArray})
+				.then(function(response) {
+					$("#noPicturesText").css("display", "inherit");
+					$(".imageSelectable").remove();
+					response.entries.forEach(function(entry, i) {
+						if (entry[".tag"] != "failure") {
+							$("#noPicturesText").css("display", "none");
+							var img = document.createElement("img");
+							img.src = "data:image/jpeg;base64," + entry.thumbnail;
+							img.className = "image imageSelectable";
+							$(img).data("parentDir", parentDirArray[i]);
+							img.addEventListener("click", getItemThumbnails);
+							$("#picturesContainer").append(img);
+						}
+					});
+				})
+				.catch(function(error) {
+					console.log(error);
+					
+				})
+		};
+		// Called when thumbnail image is clicked on.
+		var uploadToEPSCounter = 0;
+		function getItemThumbnails() {
+			this.removeEventListener("click", getItemThumbnails);
+			$(document.body).css({"cursor": "progress"});
+			$(".imageSelectable").css({"cursor": "progress"});
+			imagesDirectory = $(this).data("parentDir");
+			dbx.filesGetMetadata({path: imagesDirectory, include_media_info: false, include_deleted: false, include_has_explicit_shared_members: false})
+				.then(function(resp) {
+					if (resp[".tag"] == "folder") {
+						dbx.filesListFolder({path: imagesDirectory, limit: 12})
+							.then(function(response) {
+								let entriesArray = [];
+								let n = 0;
+								response.entries.forEach(function(entry) {
+									entriesArray.push({
+										path: entry.path_lower,
+										format: "jpeg",
+										size: "w128h128"
+									});
+									n++;
+									if(n == response.entries.length) {
+										$(".image").remove();
+										$("#picturesSubheading").remove();
+										dbx.filesGetThumbnailBatch({entries: entriesArray})
+											.then(function(response) {
+												$("#picturesContainer h1").css("margin-bottom", 5);
+												$("#removePicturesButton").show();
+												$(document.body).css({"cursor": "inherit"});
+												response.entries.forEach(function(entry, i) {
+													var img = document.createElement("img");
+													img.src = "data:image/jpeg;base64," + entry.thumbnail;
+													img.draggable = false;
+													img.className = "image imageDraggable";
+													dbx.filesGetTemporaryLink({path: entriesArray[i].path})
+														.then(function(resp) {
+															uploadToEPS(resp.link, img);
+														});
+													$("#picturesContainer").append(img);
+												});
+												// Add blank image boxes.
+												for (i=0; i<12-$(".imageDraggable").length; i++) {
+													$("#picturesContainer").append("<div class='emptyImage'></div>");
+												};
+												enableReorderingImages();
+											});
+									};
+								});
+							})
+							.catch(function(error) {
+								console.log(error);
+							});
+					} else {
+						// Condition for a single image file (not a folder).
+						$(".image").remove();
+						$("#picturesSubheading").remove();
+						dbx.filesGetThumbnailBatch({entries: [{
+							path: imagesDirectory,
+							format: "jpeg",
+							size: "w128h128"
+						}]}).then(function(response) {
+							$("#picturesContainer h1").css("margin-bottom", 5);
+							$("#removePicturesButton").show();
+							$(document.body).css({"cursor": "inherit"});
+							var img = document.createElement("img");
+							img.src = "data:image/jpeg;base64," + response.entries[0].thumbnail;
+							img.draggable = false;
+							img.className = "image imageDraggable";
+							dbx.filesGetTemporaryLink({path: imagesDirectory})
+								.then(function(resp) {
+									uploadToEPS(resp.link, img);
+								})
+								.catch(function(error){
+									console.log(error);
+								});
+							$("#picturesContainer").append(img);
+							// Add blank image boxes.
+							for (i=0; i<12-$(".imageDraggable").length; i++) {
+								$("#picturesContainer").append("<div class='emptyImage'></div>");
+							};
+							enableReorderingImages();
+						}).catch(function(error) {
+							console.log(error);
+						})
+					}
+				});
+		};
+
+		function uploadToEPS(dropboxURL, imgElement) {
+			var xmlRequest = `
+			<?xml version="1.0" encoding="utf-8"?>
+			<UploadSiteHostedPicturesRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+				<RequesterCredentials>
+					<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+				</RequesterCredentials>
+				<WarningLevel>High</WarningLevel>
+				<ExternalPictureURL>` + dropboxURL + `</ExternalPictureURL>
+				<PictureSet>Supersize</PictureSet>
+			</UploadSiteHostedPicturesRequest>
+			`;
+
+			$.ajax({
+				url: "https://api.ebay.com/ws/api.dll",
+				type: "POST",
+				data: xmlRequest,
+				headers: {
+					"X-EBAY-API-COMPATIBILITY-LEVEL": "1043",
+					"X-EBAY-API-DEV-NAME": "f22eb88a-1c47-4dc2-ad0d-e42d08b9b08c",
+					"X-EBAY-API-APP-NAME": "JamesRan-AntiqueL-PRD-15d7504c4-a7cbc7af",
+					"X-EBAY-API-CERT-NAME": "PRD-5d7504c476a1-8a1b-4afe-9ae0-3571",
+					"X-EBAY-API-CALL-NAME": "UploadSiteHostedPictures",
+					"X-EBAY-API-SITEID": "0",
+				},
+				contentType: "text/xml",
+				dataType: "xml",
+				success: function(resp) {
+					$(imgElement).data("path", $(resp).find("FullURL").text());
+					uploadToEPSCounter++;
+					if (uploadToEPSCounter >= $(".imageDraggable").length) {
+						listItemCheck.pictures = true;
+						evaluateListButtonState();
+						console.log("Done uploading to EPS.");
+					}
+				}
+			});
+		};
+
+		// Remove pictures
+		$("#removePicturesButton").click(function() {
+			if ($(this).html() == "Remove") {
+				$(this).html("Done");
+				// Add x marks.
+				for (i=0; i<$(".imageDraggable").length; i++) {
+					$("#picturesContainer").append("<img src='failure.png' class='imageX' draggable='false'>");
+					$(".imageX").eq(i).delay(i*15).fadeIn(200);
+					$(".imageX").eq(i).css("left", $(".imageDraggable").eq(i).position().left);
+					$(".imageX").eq(i).css("top", $(".imageDraggable").eq(i).position().top);
+				}
+				$(".imageX").click(function() {
+					$("#removePicturesButton").html("Remove");
+					// Position all images to the right of deleted image with fixed coordinates.
+					$(".imageDraggable").slice($(this).index(".imageX"), $(".imageDraggable").length).each(function() {
+						$(this).css("left", $(this).offset().left - parseInt($(this).css("margin")));
+						$(this).css("top", $(this).offset().top - $(window).scrollTop() - parseInt($(this).css("margin")));
+					})
+					// Position empty images with fixed coordinates.
+					$(".emptyImage").each(function() {
+						$(this).css("left", $(this).offset().left - parseInt($(this).css("margin")));
+						$(this).css("top", $(this).offset().top - $(window).scrollTop() - parseInt($(this).css("margin")));
+					})
+					$(".imageDraggable").slice($(this).index(".imageX"), $(".imageDraggable").length).css("position", "fixed");
+					$(".emptyImage").css("position", "fixed");
+
+					// Animate delete x mark and image.
+					$(".imageDraggable").eq($(this).index(".imageX")).animate({
+						width: "0px",
+						height: "0px"
+					}, function() {$(this).remove()});
+					$(".imageX").delay(200).fadeOut(200, function() {
+						$(this).remove()
+					})
+					// Animate pictures filling in gap.
+					$(".imageDraggable").slice($(this).index(".imageX"), $(".imageDraggable").length).each(function(i) {
+						if ($(this).index(".imageDraggable") == 6) {
+							var moveTop = "-=120px";
+							var moveLeft = "+=760px";
+						} else {
+							var moveTop = "-=0px";
+							var moveLeft = "-=152px";
+						}
+						$(this).delay(i*50 + 100).animate({
+							left: moveLeft,
+							top: moveTop
+						}, function() {
+							$(this).css("position", "static");
+						})
+					})
+					setTimeout(function() {
+						$("#picturesContainer").append("<div class='emptyImage'></div>");
+						$(".emptyImage").css("position", "static");
+						$(".emptyImage").first().hide().fadeIn();
+					}, 1000);
+					
+				})
+				// Prevent body mousedown from firing.
+				$(".imageX").mousedown(function(e) {
+					e.stopPropagation();
+				})
+			} else {
+				$(this).html("Remove");
+				// Remove x marks.
+				$(".imageX").each(function(i) {
+					$(this).delay(($(".imageX").length-i)*15).fadeOut(200, function() {
+						$(this).remove();
+					});
+				})
+			}
+		})
+
+		// Reordering of pictures
+		function enableReorderingImages() {
+			var isBeingDragged = false;
+			var isAnimating = false;
+			var dragImg;
+			var dropImg;
+			var xOffset = 0;
+			var yOffset = 0;
+			var dropImgMidX;
+			var upDownIndicator;
+			$(".imageDraggable").css("cursor", "-webkit-grab");
+			$(document.body).mousedown(function(e) {
+				if (isBeingDragged == false) {
+					dragImg = getImageAt(e).last();
+					if (dragImg.length > 0) {
+						isBeingDragged = true;
+						$(dragImg).css("cursor", "-webkit-grabbing");
+
+						// Position image with fixed coordinates.
+						$(dragImg).css("left", $(dragImg).offset().left - parseInt($(dragImg).css("margin")));
+						$(dragImg).css("top", $(dragImg).offset().top - $(window).scrollTop() - parseInt($(dragImg).css("margin")));
+						$(dragImg).css("position", "fixed");
+
+						$(dragImg).removeClass("imageDraggable");
+
+						// Calculate offset of mouse inside image frame.
+						xOffset = e.pageX - parseInt($(dragImg).css("left"));
+						yOffset = e.pageY - parseInt($(dragImg).css("top"));
+
+						// Display blue placeholder image.
+						$("#placeholderImage").insertAfter(dragImg);
+						$("#placeholderImage").css("display", "block");
+
+						$("#picturesContainer").append(dragImg);
+					};
+				};
+			});
+			$(document.body).mousemove(function(e) {
+				if (isBeingDragged && isAnimating==false) {
+					// Update image position in fixed coordinates.
+					$(dragImg).css("left", e.pageX - xOffset);
+					$(dragImg).css("top", e.pageY - yOffset);
+
+					// Calculate the "dropImg," the image beneath the mouse pointer.
+					dropImg = getImageAt(e)[0];
+					if (dropImg) {
+						upDownIndicator = ($("#placeholderImage").index() - $(dropImg).index());
+						if (upDownIndicator > 1) {
+							$("#placeholderImage").insertBefore(dropImg);
+						} else if (upDownIndicator < -1) {
+							$("#placeholderImage").insertAfter(dropImg);
+						} else {
+							dropImgMidX = $(dropImg).offset().left + $(dropImg).outerWidth()/2
+							if (e.pageX < dropImgMidX) {
+								$("#placeholderImage").insertAfter(dropImg);
+							} else {
+								$("#placeholderImage").insertBefore(dropImg);
+							};
+						};
+					};
+				};
+			});
+			$(document.body).mouseup(function() {
+				if (isBeingDragged) {
+					isAnimating = true;
+					$(dragImg).css("cursor", "-webkit-grab");
+					$(dragImg).animate({
+						left: $("#placeholderImage").offset().left - parseInt($("#placeholderImage").css("margin")),
+						top: $("#placeholderImage").offset().top - $(window).scrollTop() - parseInt($("#placeholderImage").css("margin"))
+					}, function() {
+						$(dragImg).addClass("imageDraggable");
+						$(dragImg).css("position", "static");
+						$(dragImg).insertAfter("#placeholderImage");
+						$("#placeholderImage").css("display", "none");
+						dragImg = null;
+						isBeingDragged = false;
+						isAnimating = false;
+					});
+				};
+			});
+			$(document.body).mouseleave(function() {
+				$(document.body).mouseup();
+			});
+		};
+
+		function getImageAt(e) {
+			return $("#picturesContainer").find(".imageDraggable").filter(function() {
+				if (e.pageY > $(this).offset().top && e.pageY < $(this).offset().top + $(this).outerHeight()) {
+					if (e.pageX > $(this).offset().left && e.pageX < $(this).offset().left + $(this).outerWidth()) {
+						return this;
+					};
+				};
+			});
+		};
+
+		// Fade in/out dollar sign in price input.
+		$("#priceInput").focus(function() {
+			$("#dollarSign").css("color", "black");
+		});
+
+		$("#priceInput").focusout(function() {
+			if ($(this).val() == "") {
+				$("#dollarSign").css("color", "#A1A1A1");
+			}
+		});
+
+		// Price list item check.
+		$("#priceInput").keyup(function() {
+			if ($(this).val()) {
+				listItemCheck.price = true;
+			} else {
+				listItemCheck.price = false;
+			};
+			evaluateListButtonState();
+		});
+
+		// Selling format list item check.
+		$("input[name='format']").click(function() {
+			listItemCheck.format = true;
+			evaluateListButtonState();
+		});
+
+		// Create handling fee input.
+		$("#handlingFeeText").click(function() {
+			$(this).html("Handling Fee<span id='handlingFeeDollarSign'>$</span><input id='handlingFeeInput'></input>");
+			$(this).css({
+				"color": "#A1A1A1",
+				"cursor": "inherit",
+				"font-size": "16px",
+				"top": "94px",
+				"left": "65px"
+			});
+			$("#priceFormatContainer").css("margin-top", "27px");
+			$(this).off();
+
+			// Fade in/out dollar sign in handling fee input.
+			$("#handlingFeeInput").focus(function() {
+				$("#handlingFeeDollarSign").css("color", "black");
+			});
+
+			$("#handlingFeeInput").focusout(function() {
+				if ($(this).val() == "") {
+					$("#handlingFeeDollarSign").css("color", "#A1A1A1");
+				}
+			});
+		});
+
+		// Select dimensions and weight text when clicked into text box.
+		$("#dimensionsInputText input").focus(function() {
+			$(this).select();
+		});
+		$("#weightInputText input").focus(function() {
+			$(this).select();
+		});
+
+		// Dimensions list item check.
+		$("#dimensionsInputText input").keyup(function() {
+			if ($("#boxLengthInput").val() && $("#boxWidthInput").val() && $("#boxHeightInput").val()) {
+				listItemCheck.dimensions = true;
+			} else {
+				listItemCheck.dimensions = false;
+			};
+			evaluateListButtonState();
+		});
+
+		// Weight list item check.
+		$("#weightInputText input").keyup(function() {
+			if ($("#poundsInput").val() || $("#ouncesInput").val()) {
+				listItemCheck.weight = true;
+			} else {
+				listItemCheck.weight = false;
+			};
+			evaluateListButtonState();
+		});
+
+		// Make international shipping option behave like a checkbox.
+		$("#shippingContainer").click(function() {
+			if (this.dataset.checked == "true") {
+				this.dataset.checked = "false";
+				$("#internationalShippingCheckbox").css("background-color", "white");
+			} else {
+				this.dataset.checked = "true";
+				$("#internationalShippingCheckbox").css("background-color", "#52D3E8");
+			}
+		});
+
+		function evaluateListButtonState() {
+			var disabled = false;
+			needsConfirmationBeforeClosing = false;
+			$.each(listItemCheck, function(name, value) {
+				if (!value) {
+					disabled = true;
+				} else {
+					needsConfirmationBeforeClosing = true;
+				}
+			});
+			$("#listItemButton").prop("disabled", disabled);
+		};
+
+
+		// List Item button clicked.
+		$("#listItemButton").click(function() {
+			// Disable button.
+			$("#listItemButton").prop("disabled", true);
+			$(document.body).css({"cursor": "progress"});
+
+			// Save title, condition description, and item description to local storage.
+			stash.set("title", $("#titleTextarea").val());
+			stash.set("condition", $("#conditionTextarea").val());
+			stash.set("description", $("#descriptionTextarea").val());
+
+			// Determine whether or not to use Gallery Plus.
+			var galleryType = "";
+			const cat = $("#categorySelect").find(":selected")[0].dataset.parentCategory;
+			if (cat=="Collectibles" || cat=="Art" || cat=="Pottery & Glass" || cat=="Antiques") {
+				galleryType = "Plus";
+			} else {
+				galleryType = "Gallery";
+			}
+
+			// Determine whether condition is Used or Good.
+			var condition = "3000";
+			if (cat=="Books" || cat=="DVDs & Movies" || cat=="Music" || $("#categorySelect").val()=="139973") {
+				condition = "5000";
+			};
+
+			// Determine shipping service.
+			var shippingService = "";
+			if (/\bcd\b/i.test($("#titleTextarea").val()) || /\bbook\b/i.test($("#titleTextarea").val()) || /\bbooks\b/i.test($("#titleTextarea").val())) {
+				shippingService = "USPSMedia";
+			} else {
+				let weight = ($("#poundsInput").val() ? parseInt($("#poundsInput").val()) : 0)*16 + ($("#ouncesInput").val() ? parseInt($("#ouncesInput").val()) : 0);
+				if (weight <= 13) {
+					shippingService = "USPSFirstClass";
+				} else {
+					let volume = parseInt($("#boxLengthInput").val()) * parseInt($("#boxWidthInput").val()) * parseInt($("#boxHeightInput").val());
+					if (volume > 1728) {
+						shippingService = "USPSParcel";
+					} else {
+						shippingService = "USPSPriority";
+					};
+				};
+			};
+
+			// Get item specifics Name/Value pairs.
+			var xmlItemSpecifics = "";
+			$(".itemSpecificInput").each(function() {
+				if ($(this).val()) {
+					xmlItemSpecifics += `
+					<NameValueList>
+						<Name>` + $(this).attr("name") + `</Name>
+						<Value>` + $(this).val() + `</Value>
+					</NameValueList>`;
+				}
+			});
+
+			// Determine Listing Duration.
+			var listingDuration = "";
+			if ($("input[name='format']:checked").val() == "Chinese") {
+				listingDuration = "Days_7";
+			} else {
+				listingDuration = "GTC";
+			}
+
+			// Get EPS links for images.
+			var xmlImageURLs = "";
+			$(".imageDraggable").each(function() {
+				xmlImageURLs += "<PictureURL>" + $(this).data("path") + "</PictureURL>";
+			});
+
+			// Add Item.
+			var xmlRequest = `
+			<?xml version="1.0" encoding="utf-8"?>
+			<AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+				<RequesterCredentials>
+					<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+				</RequesterCredentials>
+			<Item>
+				<Title>` + $("#titleTextarea").val() + `</Title>
+				<Description>
+					<![CDATA[<span style="font-family:Helvetica,sans-serif;">` + $("#descriptionTextarea").val() + ` Please see condition description above. Fresh from a local estate. Please see my other items on eBay. Thanks.</span>
+					<span style="font-family:Helvetica,sans-serif;font-size:small;">` + ($("#shippingContainer")[0].dataset.checked == "true" ? "<br><br>Please see shipping calculator for shipping cost. International shipping is only offered via the Global Shipping program. You will see a shipping price if your country or address is serviced.  If you don't see a shipping cost, or if you have an International PO box, you aren't serviced by the Global Shipping program and I can't send the item to you. Buyer is responsible for Customs fees, Global Shipping Program fees, and wait period. Customs value declared at winning bid price. Thanks." : "") + `<br><br><i><b>Guaranteed authentic. Col. Bob Randolph Auctioneer/Randolph Galleries. est. 1977.</b></i></span>]]>
+				</Description>
+				<PrimaryCategory>
+					<CategoryID>` + $("#categorySelect").val() + `</CategoryID>
+				</PrimaryCategory>
+				<StartPrice>` + $("#priceInput").val() + `</StartPrice>
+				<ConditionDescription>` + $("#conditionTextarea").val() + `</ConditionDescription>
+				<ConditionID>` + condition + `</ConditionID>
+				<Country>US</Country>
+				<Currency>USD</Currency>
+				<DispatchTimeMax>1</DispatchTimeMax>
+				<ItemSpecifics>
+					` + xmlItemSpecifics + `
+				</ItemSpecifics>
+				<ListingDuration>` + listingDuration + `</ListingDuration>
+				<ListingType>` + $("input[name='format']:checked").val() + `</ListingType>
+				<PaymentMethods>PayPal</PaymentMethods>
+				<PayPalEmailAddress>randgal@aol.com</PayPalEmailAddress>
+				<PictureDetails>
+					<GalleryType>` + galleryType + `</GalleryType>
+					` + xmlImageURLs + `
+				</PictureDetails>
+				<PostalCode>08736</PostalCode>
+				<Quantity>1</Quantity>
+				<ReturnPolicy>
+					<ReturnsAcceptedOption>ReturnsAccepted</ReturnsAcceptedOption>
+					<RefundOption>MoneyBack</RefundOption>
+					<ReturnsWithinOption>Days_30</ReturnsWithinOption>
+					<ShippingCostPaidByOption>Buyer</ShippingCostPaidByOption>
+				</ReturnPolicy>
+				<ShippingDetails>
+					<CalculatedShippingRate>
+						<PackagingHandlingCosts>` + ($("#handlingFeeInput").val() ? $("#handlingFeeInput").val() : 0) + `</PackagingHandlingCosts>
+					</CalculatedShippingRate>
+					<GlobalShipping>` + $("#shippingContainer")[0].dataset.checked + `</GlobalShipping>
+					<SalesTax>
+						<SalesTaxPercent>6.625</SalesTaxPercent>
+						<SalesTaxState>NJ</SalesTaxState>
+						<ShippingIncludedInTax>1</ShippingIncludedInTax>
+					</SalesTax>
+					<ShippingServiceOptions>
+						<ShippingServicePriority>1</ShippingServicePriority>
+						<ShippingService>` + shippingService + `</ShippingService>
+					</ShippingServiceOptions>
+				</ShippingDetails>
+				<ShippingPackageDetails>
+					<MeasurementUnit>English</MeasurementUnit>
+					<PackageDepth>` + $("#boxHeightInput").val() + `</PackageDepth>
+					<PackageLength>` + $("#boxLengthInput").val() + `</PackageLength>
+					<PackageWidth>` + $("#boxWidthInput").val() + `</PackageWidth>
+					<ShippingIrregular>false</ShippingIrregular>
+					<ShippingPackage>PackageThickEnvelope</ShippingPackage>
+					<WeightMajor>` + ($("#poundsInput").val() ? $("#poundsInput").val() : 0) + `</WeightMajor>
+					<WeightMinor>` + ($("#ouncesInput").val() ? $("#ouncesInput").val() : 0) + `</WeightMinor>
+				</ShippingPackageDetails>
+				<Site>US</Site>
+			</Item>
+			<ErrorLanguage>en_US</ErrorLanguage>
+			<WarningLevel>High</WarningLevel>
+			<Version>1043</Version>
+			</AddItemRequest>
+			`;
+
+			// Send HTTP request.
+			$.ajax({
+				url: "https://api.ebay.com/ws/api.dll",
+				type: "POST",
+				data: xmlRequest,
+				headers: {
+					"X-EBAY-API-COMPATIBILITY-LEVEL": "1043",
+					"X-EBAY-API-DEV-NAME": "f22eb88a-1c47-4dc2-ad0d-e42d08b9b08c",
+					"X-EBAY-API-APP-NAME": "JamesRan-AntiqueL-PRD-15d7504c4-a7cbc7af",
+					"X-EBAY-API-CERT-NAME": "PRD-5d7504c476a1-8a1b-4afe-9ae0-3571",
+					"X-EBAY-API-CALL-NAME": "AddItem",
+					"X-EBAY-API-SITEID": "0",
+				},
+				contentType: "text/xml",
+				dataType: "xml",
+				success: function(resp) {
+					console.log(resp);
+					$("#listStatus button").off();
+					$("#listStatusContainer p").html("");
+					$(document.body).css({"cursor": "inherit"});
+					if ($(resp).find("Ack").text() == "Failure") {
+						$("#listStatus img").attr("src", "failure.png");
+						$("#listStatus h1").html("Failure");
+						$("#listStatus button").html("View error messages");
+						$("#listStatus button").click(function() {
+							$(resp).find("LongMessage").each(function() {
+								$("#listStatusContainer p").append($(this).text().replace(/</g, "&lt;").replace(/>/g, "&gt;") + "<br>");
+								$(document.body).animate({scrollTop: $(document).height()}, 1000);
+							});
+						});
+						$("#listStatusContainer").css("display", "inherit");
+						$(document.body).animate({scrollTop: $(document).height()}, 1000);
+						evaluateListButtonState();
+					} else {
+						$("#listStatus img").attr("src", "success.png");
+						$("#listStatus h1").html("Success");
+						$("#listStatus button").html("View on eBay");
+						$("#listStatus button").click(function() {
+							const shell = require("electron").shell;
+							shell.openExternal("http://www.ebay.com/itm/" + $(resp).find("ItemID").text());
+						});
+						if ($(resp).find("Ack").text() == "Warning") {
+							$(resp).find("ShortMessage").each(function() {
+								$("#listStatusContainer p").append("Warning: " + $(this).text().replace(/</g, "&lt;").replace(/>/g, "&gt;") + "<br>");
+							});
+						}
+						$("#listStatusContainer").css("display", "inherit");
+						$(document.body).animate({scrollTop: $(document).height()}, 1000);
+						needsConfirmationBeforeClosing = false;
+						// Delete pictures from Dropbox.
+						dbx.filesDeleteV2({path: imagesDirectory})
+							.catch(function(error) {
+								console.log(error);
+							});
+					};
+				}
+			});
+		});
+
+	</script>
+</body>
+</html>

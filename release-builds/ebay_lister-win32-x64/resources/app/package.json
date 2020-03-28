@@ -1,0 +1,21 @@
+{
+	"name": "ebay_lister",
+	"productName": "eBay Lister",
+	"version": "1.0.0",
+	"description": "Streamlines the process of listing an item on eBay.",
+	"main": "main.js",
+	"scripts": {
+		"start": "electron .",
+		"build-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=icons/mac/icon.icns --out=release-builds",
+		"build-win": "electron-packager . ebay_lister --overwrite --platform=win32 --arch=x64 --icon=icons/win/icon.ico --out=release-builds"
+	},
+	"dependencies": {
+		"electron": "~1.7.10"
+	},
+	"author": "James Randolph",
+	"license": "ISC",
+	"devDependencies": {
+		"electron-builder": "^20.0.6",
+		"electron-packager": "^10.1.2"
+	}
+}
