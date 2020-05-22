@@ -105,6 +105,8 @@
 
 	<script type="text/javascript">
 
+		require("dotenv").config();
+
 		const remote = require("electron").remote;
 
 		var needsConfirmationBeforeClosing = false;
@@ -193,7 +195,7 @@
 			<?xml version="1.0" encoding="utf-8"?>
 			<GetSuggestedCategoriesRequest xmlns="urn:ebay:apis:eBLBaseComponents">
 				<RequesterCredentials>
-				<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+				<eBayAuthToken>` + process.env.EBAY_API_KEY + `</eBayAuthToken>
 				</RequesterCredentials>
 				<Query>` + $("#titleTextarea").val() + `</Query>
 				<ErrorLanguage>en_US</ErrorLanguage>
@@ -322,7 +324,7 @@
 				<?xml version="1.0" encoding="utf-8"?>
 				<GetCategorySpecificsRequest xmlns="urn:ebay:apis:eBLBaseComponents">
 					<RequesterCredentials>
-					<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+					<eBayAuthToken>` + process.env.EBAY_API_KEY + `</eBayAuthToken>
 					</RequesterCredentials>
 					<CategoryID>` + $("#categorySelect").val() + `</CategoryID>
 					<MaxNames>6</MaxNames>
@@ -547,7 +549,7 @@
 		}
 
 		// Get pictures from Dropbox.
-		var dbx = new Dropbox.Dropbox({ accessToken: "W-YZ0CUM93AAAAAAAAAEpDNIefVMJYUr__kn8B3irDa9LmoauavWIlb2-FZDIPCn" });
+		var dbx = new Dropbox.Dropbox({ accessToken: process.env.DROPBOX_API_KEY, fetch });
 		var imagesDirectory = "";
 		// Create an array of entries containing paths to the first picture in each folder.
 		function getImagesFromFoldersInDropbox() {
@@ -727,7 +729,7 @@
 			<?xml version="1.0" encoding="utf-8"?>
 			<UploadSiteHostedPicturesRequest xmlns="urn:ebay:apis:eBLBaseComponents">
 				<RequesterCredentials>
-					<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+					<eBayAuthToken>` + process.env.EBAY_API_KEY + `</eBayAuthToken>
 				</RequesterCredentials>
 				<WarningLevel>High</WarningLevel>
 				<ExternalPictureURL>` + dropboxURL + `</ExternalPictureURL>
@@ -1108,7 +1110,7 @@
 			<?xml version="1.0" encoding="utf-8"?>
 			<AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
 				<RequesterCredentials>
-					<eBayAuthToken>AgAAAA**AQAAAA**aAAAAA**LJcbWg**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnYChAJeHoQ6dj6x9nY+seQ**Ff8DAA**AAMAAA**ODEiOkWlUTTC9MvDCUQPrXDk3+hKHZ+wnFgZlEXh+GzY6p/njjyE+EdkqXFfDbuvzjKkuxTtjAofSecDFeLyh5g8A0I8BlGvEXKbJklXD6vhHp0EZofeMXaQVGluEIiaVkd3IapIiHnwjYFtlg0TRWSoEbRI0A6crBujOL+iCXmdshRjP2D/EEt3QO9sbNp5yWroFiMk4W4yd/k9K8LlbXX7E3RBxh5vZ3cGscOv4YhOwAqsXWnbWmoA1IZF/xRbmX5ZQhkIWPR6aYmpfloLZRpd52q+I24UFBCD2SMYv2UoRH7WAzwc4DKU95i6jWacKCPbkCPQdt4uRnri9m6y85eGVPQE149iGvMkRAaVbngmzUJueSC7hmD5B7gG2Gi7Y/mjNHkmeWbfI+5qURAL71nn7SrQXxn6yjwRwRyjHjkrv9oqw9pApWJDXs+9cwLk+f01p8YkyIw6yFlCYUA0eWapuyoyTuQdBQDp5nILBs3zkcXx6rpUqkS7KG01F2psP0Zx5Vi/MPtW9DbYwrM3uk2EPB4SSxqTRaPP+qXzIWEXmRdN3kV9/aBR0I/KyYNuaJudnhH45CWJzxei34oVXUwWuHoNyqLq4FXeP9GqPEkcesTzxZyhuHoDEOtQqhxzrz9DZDo7WiVmbJGcKfi100NiwSyv6sgrepArGILDX1toW5zRxUiS/gU43Pb2VySwdWXQzvv7GFzf5WYUO7FvnT0QN3OS2o8hmldPrOy94p4p5KYZBDBQcBpGffhSKQo2</eBayAuthToken>
+					<eBayAuthToken>` + process.env.EBAY_API_KEY + `</eBayAuthToken>
 				</RequesterCredentials>
 			<Item>
 				<Title>` + $("#titleTextarea").val() + `</Title>
