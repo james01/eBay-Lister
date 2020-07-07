@@ -16,7 +16,7 @@
 	"author": "James Randolph",
 	"license": "ISC",
 	"devDependencies": {
-		"electron": "^1.8.8",
+		"electron": "^7.2.4",
 		"electron-builder": "^22.6.1",
 		"electron-packager": "^14.1.1"
 	}
